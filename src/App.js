@@ -1,25 +1,26 @@
-import logo from './logo.svg';
-import './App.css';
+import './App.css'
+// dependencies
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom'
+// pages
+import IndexPage from './components/pages/IndexPage'
+import EditorPage from './components/pages/EditorPage'
+import MyListPage from './components/pages/MyListPage'
+import NotFoundPage from './components/pages/NotFoundPage'
 
-function App() {
+// TODO: ドロワーの開閉などのステート管理できるプロバイダ
+const App = () => {
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <Router>
+        <Switch>
+          <Route path="/" component={IndexPage} exact />
+          <Route path="/editor" component={EditorPage} exact />
+          <Route path="/mylist" component={MyListPage} exact />
+          <Route component={NotFoundPage} />
+        </Switch>
+      </Router>
     </div>
-  );
+  )
 }
 
-export default App;
+export default App
