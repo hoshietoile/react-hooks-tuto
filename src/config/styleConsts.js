@@ -20,4 +20,7 @@ export default {
     DISABLE: '#ccc',
     DEFAULT: '#999',
   },
+  DRAWER: {
+    WIDTH: 240,
+  },
 }
