@@ -95,11 +95,31 @@ const EditorPage = ({ theme }) => {
       height: '20px',
       margin: 'auto',
     },
+    editorDialog: {
+      position: 'relative',
+    },
     editorDialogContent: {
       display: 'flex',
     },
     editorDialogForm: {
       padding: theme.spacing(2),
+    },
+    editorDialogClose: {
+      position: 'absolute',
+      display: 'inline-block',
+      top: '10px',
+      right: '10px',
+      width: '50px',
+      height: '30px',
+      lineHeight: '30px',
+      backgroundColor: theme.palette.error.main,
+      color: theme.palette.primary.contrastText,
+      border: 'none',
+      borderRadius: '4px',
+      cursor: 'pointer',
+      '&:hover': {
+        backgroundColor: theme.palette.error.dark,
+      },
     },
     alert: {},
   })()
@@ -403,7 +423,10 @@ const EditorPage = ({ theme }) => {
         </Paper>
       </Card>
 
-      <Dialog maxWidth="lg" onEntering={handleEntering} open={dialogOpen}>
+      <Dialog maxWidth="lg" onEntering={handleEntering} open={dialogOpen} className={classes.editorDialog}>
+        <button className={classes.editorDialogClose} onClick={handleSaveCancel}>
+          ✖
+        </button>
         <DialogTitle>ドット絵を保存する</DialogTitle>
         <DialogContent dividers>
           <div className={classes.editorDialogContent}>
