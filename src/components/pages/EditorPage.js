@@ -19,15 +19,21 @@ import TextField from '@material-ui/core/TextField'
 import FormControl from '@material-ui/core/FormControl'
 import FormHelperText from '@material-ui/core/FormHelperText'
 import Snackbar from '@material-ui/core/Snackbar'
+import Menu from '@material-ui/core/Menu'
+import MenuItem from '@material-ui/core/MenuItem'
 import IconButton from '@material-ui/core/IconButton'
 import CloseIcon from '@material-ui/icons/Close'
+import MoreVertIcon from '@material-ui/icons/MoreVert'
 // import Alert from '@material-ui/lab/Alert'
 // templates
 import GenericTemplate from './../templates/GenericTemplate'
+// consts
+import consts from './../../config/consts'
 // modules
 // import api from './../../api/index'
 import handleApi from './../../modules/handleApi'
 import Api from './../../api/methods'
+// import { MenuItem } from '@material-ui/core'
 const api = new Api()
 
 const CustomSlider = withStyles({
@@ -83,6 +89,10 @@ const EditorPage = ({ theme }) => {
     editorToolbarSliders: {
       marginBottom: 'auto',
     },
+    editorToolbarIcon: {
+      padding: '0',
+      marginLeft: 'auto',
+    },
     colorPickerInput: {
       display: 'none',
     },
@@ -93,7 +103,7 @@ const EditorPage = ({ theme }) => {
     editorToolbarColor: {
       width: '100px',
       height: '20px',
-      margin: 'auto',
+      marginLeft: 'auto',
     },
     editorDialog: {
       position: 'relative',
@@ -124,27 +134,18 @@ const EditorPage = ({ theme }) => {
     alert: {},
   })()
   const canvas = useRef(null)
-  const [context, setContext] = useState(null)
   const [w, setW] = useState(0)
   const [h, setH] = useState(0)
-  const [cellSize, setCellSize] = useState(20)
-  const [cell, setCell] = useState(12)
+  const [cellSize, setCellSize] = useState(0)
+  const [cell, setCell] = useState(consts.CELL_NUM.LARGE.VALUE)
   const [drawing, setDrawing] = useState(false)
   const [color, setColor] = useState('rgb(0,0,0)')
   const [dialogOpen, setDialogOpen] = useState(false)
   const [imageSrc, setImageSrc] = useState('')
-  const [form, setForm] = useState({
-    title: {
-      value: '',
-      message: '',
-    },
-    description: {
-      value: '',
-      message: '',
-    },
-  })
+  const [form, setForm] = useState(consts.EDITOR_FORM)
   const [isInvalid, setIsInvalid] = useState(false)
   const [isShowToastr, setIsShowToastr] = useState(false)
+  const [anchorEl, setAnchorEl] = useState(null)
 
   const currentColorStyle = useMemo(() => {
     return { backgroundColor: color }
@@ -158,7 +159,7 @@ const EditorPage = ({ theme }) => {
       const parentNodeRect = cnvs.parentNode.getBoundingClientRect()
       const cellNum = cell
       // const windowHeight = Math.ceil((window.innerHeight - parentNodeRect.top) / cellNum) * cellNum
-      const maxHeight = 480
+      const maxHeight = consts.CANVAS_MAX_SIZE
       const { width, height } = parentNodeRect
 
       if (cellNum !== 0) {
@@ -199,7 +200,8 @@ const EditorPage = ({ theme }) => {
   }
   // 描画処理
   const execDraw = (e) => {
-    const ctxt = context
+    const cnvs = canvas.current
+    const ctxt = cnvs.getContext('2d')
     const col = Math.floor(e.layerX / cellSize)
     const row = Math.floor(e.layerY / cellSize)
     ctxt.fillStyle = color
@@ -227,23 +229,12 @@ const EditorPage = ({ theme }) => {
   }
   // 初回レンダリング時実行
   useEffect(() => {
-    const cnvs = canvas.current
-    const ctxt = cnvs.getContext('2d')
-    setContext(ctxt)
-    const [w, h] = getCanvasSize(cnvs)
-    setCellSize(w / cell)
-    setW(w)
-    setH(h)
-    clearCanvas()
-    drawRule()
+    initCanvas()
   }, [])
   // 更新時処理
   useEffect(() => {
-    if (context) {
-      clearCanvas()
-      drawRule()
-    }
-  }, [context, w, h])
+    initCanvas()
+  }, [w, h, cellSize, cell])
   // スライダー移動時ハンドラ
   const sliderHandler = (e, index) => {
     const value = e.target.style.left
@@ -275,6 +266,22 @@ const EditorPage = ({ theme }) => {
   const handleSaveCancel = () => {
     setDialogOpen(false)
   }
+  const initialize = () => {
+    initCanvas()
+    initForm()
+  }
+  const initForm = () => {
+    setForm(consts.EDITOR_FORM)
+  }
+  const initCanvas = () => {
+    const cnvs = canvas.current
+    const [w, h] = getCanvasSize(cnvs)
+    setCellSize(w / cell)
+    setW(w)
+    setH(h)
+    clearCanvas()
+    drawRule()
+  }
   // セーブ時のハンドラ
   const handleSaveApply = async () => {
     if (validateForm()) {
@@ -287,6 +294,7 @@ const EditorPage = ({ theme }) => {
       await handleApi(
         api.storeImage(reqBody).then((res) => {
           console.log(res)
+          initialize()
         })
       )
       setDialogOpen(false)
@@ -314,19 +322,19 @@ const EditorPage = ({ theme }) => {
   // タイトルのバリデータ
   const validateTitle = () => {
     const titleValue = form.title.value
-    if (titleValue.length > 20) {
-      return '20文字以内にしてください'
+    if (titleValue.length > consts.EDITOR_FORM_VALIDATION_MSG.TITLE.MAX.VALUE) {
+      return consts.EDITOR_FORM_VALIDATION_MSG.TITLE.MAX.TEXT
     }
     if (titleValue.length === 0) {
-      return 'タイトルは必須入力です'
+      return consts.EDITOR_FORM_VALIDATION_MSG.TITLE.REQUIRED.TEXT
     }
     return ''
   }
   // 備考のバリデータ
   const validateDescription = () => {
     const descriptionValue = form.description.value
-    if (descriptionValue.length > 100) {
-      return '100文字以内にしてください'
+    if (descriptionValue.length > consts.EDITOR_FORM_VALIDATION_MSG.DESCRIPTION.MAX.VALUE) {
+      return consts.EDITOR_FORM_VALIDATION_MSG.DESCRIPTION.MAX.TEXT
     }
     return ''
   }
@@ -361,6 +369,33 @@ const EditorPage = ({ theme }) => {
     }
     setIsShowToastr(false)
   }
+  // セルの数でサイズを判定
+  const cellSizeText = useMemo(() => {
+    switch (parseInt(cell)) {
+      case consts.CELL_NUM.SMALL.VALUE:
+        return consts.CELL_NUM.SMALL.TEXT
+      case consts.CELL_NUM.MEDIUM.VALUE:
+        return consts.CELL_NUM.MEDIUM.TEXT
+      case consts.CELL_NUM.LARGE.VALUE:
+        return consts.CELL_NUM.LARGE.TEXT
+      default:
+        return '規格外のサイズ'
+    }
+  }, [cell])
+
+  const handleCellSetBtnClick = (event) => {
+    setAnchorEl(event.currentTarget)
+  }
+
+  const handleCellSetBtnClose = () => {
+    setAnchorEl(null)
+  }
+  // セルの数をセット->useEffectで再描画処理
+  const handleCellSizeMenuClick = (cellNum) => {
+    setCell(cellNum)
+    setAnchorEl(null)
+  }
+
   return (
     <GenericTemplate>
       <Card className={classes.editorCard}>
@@ -380,6 +415,43 @@ const EditorPage = ({ theme }) => {
           <Grid container direction="column" className={classes.editorToolbarSliders}>
             <Grid container direction="row">
               <Typography component="h1" variant="h6" color="inherit">
+                Cell Size
+              </Typography>
+              <IconButton
+                aria-controls="editor-cell-size-menu"
+                aria-haspopup="true"
+                className={classes.editorToolbarIcon}
+                onClick={handleCellSetBtnClick}
+              >
+                <MoreVertIcon />
+              </IconButton>
+              <Menu
+                id="editor-cell-size-menu"
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleCellSetBtnClose}
+                keepMounted
+              >
+                <MenuItem onClick={() => handleCellSizeMenuClick(consts.CELL_NUM.SMALL.VALUE)}>
+                  {consts.CELL_NUM.SMALL.TEXT}
+                </MenuItem>
+                <MenuItem onClick={() => handleCellSizeMenuClick(consts.CELL_NUM.MEDIUM.VALUE)}>
+                  {consts.CELL_NUM.MEDIUM.TEXT}
+                </MenuItem>
+                <MenuItem onClick={() => handleCellSizeMenuClick(consts.CELL_NUM.LARGE.VALUE)}>
+                  {consts.CELL_NUM.LARGE.TEXT}
+                </MenuItem>
+              </Menu>
+            </Grid>
+            <Divider />
+            <Grid container>
+              <Typography component="h1" variant="h6" color="inherit">
+                {cellSizeText}
+              </Typography>
+            </Grid>
+
+            <Grid container direction="row">
+              <Typography component="h1" variant="h6" color="inherit">
                 Current Color
               </Typography>
               <Box className={classes.editorToolbarColor} style={currentColorStyle} />
@@ -389,20 +461,20 @@ const EditorPage = ({ theme }) => {
             <CustomSlider
               valueLabelDisplay="auto"
               aria-label="Custom slider"
-              defaultValue={20}
-              onChange={(e) => sliderHandler(e, 0)}
+              defaultValue={consts.EDITOR_SLIDER_DEFAULT_VALUE.R.VALUE}
+              onChange={(e) => sliderHandler(e, consts.EDITOR_SLIDER_DEFAULT_VALUE.R.INDEX)}
             />
             <CustomSlider
               valueLabelDisplay="auto"
               aria-label="Custom slider"
-              defaultValue={20}
-              onChange={(e) => sliderHandler(e, 1)}
+              defaultValue={consts.EDITOR_SLIDER_DEFAULT_VALUE.G.VALUE}
+              onChange={(e) => sliderHandler(e, consts.EDITOR_SLIDER_DEFAULT_VALUE.G.INDEX)}
             />
             <CustomSlider
               valueLabelDisplay="auto"
               aria-label="Custom slider"
-              defaultValue={20}
-              onChange={(e) => sliderHandler(e, 2)}
+              defaultValue={consts.EDITOR_SLIDER_DEFAULT_VALUE.B.VALUE}
+              onChange={(e) => sliderHandler(e, consts.EDITOR_SLIDER_DEFAULT_VALUE.B.INDEX)}
             />
           </Grid>
           <Divider />
