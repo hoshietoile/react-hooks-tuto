@@ -16,6 +16,8 @@ import DownloadIcon from '@material-ui/icons/SystemUpdateAlt'
 import FavoriteIcon from '@material-ui/icons/Favorite'
 // templates
 import GenericTemplate from './../templates/GenericTemplate'
+// organisms
+import IndexModal from './../organisms/IndexModal'
 // modules
 import handleApi from './../../modules/handleApi'
 import Api from './../../api/methods'
@@ -53,6 +55,8 @@ const IndexPage = ({ theme }) => {
     },
   })()
   const [images, setImages] = useState([])
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [focusImage, setFocusImage] = useState('')
   useEffect(async () => {
     const imageList = []
     await handleApi(
@@ -64,19 +68,24 @@ const IndexPage = ({ theme }) => {
       })
     )
   }, [])
+  const modalOpen = (imageSrc) => {
+    setFocusImage(imageSrc.src)
+    setIsModalOpen(true)
+  }
+  const modalClose = () => {
+    setFocusImage('')
+    setIsModalOpen(false)
+  }
   return (
     <GenericTemplate>
       <div className={classes.imageContainer}>
         {images.map((img) => (
-          <Card className={classes.imageCard} key={img.id}>
+          <Card className={classes.imageCard} key={img.id} onClick={() => modalOpen(img)}>
             <CardHeader
               className={classes.imageCardHeader}
               title={img.title}
               action={
                 <Grid container direction="row">
-                  {/* <Typography color="textPrimary" component="p">
-                    {}
-                  </Typography> */}
                   <Grid className={classes.imageCardIcons}>
                     <IconButton className={classes.imageCardIcon}>
                       <FavoriteIcon />
@@ -101,6 +110,7 @@ const IndexPage = ({ theme }) => {
           </Card>
         ))}
       </div>
+      <IndexModal open={isModalOpen} title="test" handleClose={modalClose} imageSrc={focusImage} />
     </GenericTemplate>
   )
 }
