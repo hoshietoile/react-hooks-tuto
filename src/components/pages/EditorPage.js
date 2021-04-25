@@ -125,7 +125,7 @@ const EditorPage = ({ theme }) => {
   }, [color])
 
   // スライダー移動時ハンドラ
-  const sliderHandler = useCallback((e, index) => {
+  const sliderHandler = (e, index) => {
     const value = e.target.style.left
     if (!value) return
     const inputPercent = value.replace('%', '')
@@ -133,12 +133,11 @@ const EditorPage = ({ theme }) => {
       .slice(4, -1)
       .split(',')
       .map((color) => color.trim())
-
     const inputColor = (parseInt(inputPercent) * 255) / 100
     colors[index] = inputColor
-    const newColor = `rgb(${colors})`
+    const newColor = `rgb(${colors.join(',')})`
     setColor(newColor)
-  }, [])
+  }
   // アラートクローズ時ハンドラ
   const handleToastrClose = (event, reason) => {
     if (reason === 'clickaway') {
